@@ -3,3 +3,8 @@ build/
 *.exe
 *.o
 *.obj
+.DS_Store
+Release/
+
+
+

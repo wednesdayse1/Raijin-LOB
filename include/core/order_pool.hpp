@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include "types.hpp"
 #include <cstddef>

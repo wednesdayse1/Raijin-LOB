@@ -15,7 +15,7 @@ namespace raijin
     }
     LimitOrderBook::~LimitOrderBook()
     {
-        for (size_t i; i < MAX_PRICE_TICKS; ++i)
+        for (size_t i=0; i < MAX_PRICE_TICKS; ++i)
         {
             if (bid_levels[i])
                 std::free(bid_levels[i]);
