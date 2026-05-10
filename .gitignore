@@ -5,6 +5,8 @@ build/
 *.obj
 .DS_Store
 Release/
+AGENTS.md
+docs/
 
 
 

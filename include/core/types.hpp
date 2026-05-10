@@ -4,7 +4,7 @@
 
 namespace raijin
 {
-    struct Order
+    struct alignas(16) Order
     {
         uint64_t order_id;
         uint32_t price_tick;

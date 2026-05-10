@@ -1,3 +1,0 @@
-Notes for me.
-
-- > keep prefetcher (1-2-3-4-5 > 1-5-3-2-4) in mind.. might have to redesign free_head logic if needed in the future.
