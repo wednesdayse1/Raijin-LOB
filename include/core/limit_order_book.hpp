@@ -19,6 +19,7 @@ namespace raijin
         uint64_t best_ask_price;
 
         PriceLevel *get_or_create_level(uint64_t price, bool is_buy);
+        void process_order(Order &order);
 
     public:
         explicit LimitOrderBook(size_t pool_capacity);
@@ -27,5 +28,8 @@ namespace raijin
         void add_order(uint64_t order_id, uint64_t price, uint32_t volume, bool is_buy);
         void cancel_order(Order *order);
         void execute_order(Order *order, uint32_t execution_volume);
+        void match_buy_order(Order *incoming_buy);
+        void match_sell_order(Order *incoming_sell);
+        void remove_dead_order(Order *order_ptr);
     };
 }

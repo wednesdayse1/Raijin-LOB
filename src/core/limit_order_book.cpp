@@ -1,6 +1,7 @@
 #include "../../include/core/limit_order_book.hpp"
 #include <cstdlib>
 #include <new>
+#include <algorithm>
 
 namespace raijin
 {
@@ -15,7 +16,7 @@ namespace raijin
     }
     LimitOrderBook::~LimitOrderBook()
     {
-        for (size_t i=0; i < MAX_PRICE_TICKS; ++i)
+        for (size_t i = 0; i < MAX_PRICE_TICKS; ++i)
         {
             if (bid_levels[i])
                 std::free(bid_levels[i]);
@@ -84,6 +85,26 @@ namespace raijin
             order->volume -= execution_volume;
             PriceLevel **levels = order->is_buy ? bid_levels : ask_levels;
             levels[order->price]->total_volume -= execution_volume;
+        }
+    }
+    void LimitOrderBook::match_buy_order(Order *incoming_buy)
+    {
+        while (incoming_buy->volume > 0 && incoming_buy->price >= best_ask_price)
+        {
+            PriceLevel *level = ask_levels[best_ask_price];
+            if (level == nullptr || level->head == nullptr)
+            {
+                best_ask_price++;
+                continue;
+            }
+            Order *resting_sell = level->head;
+            uint32_t fill_volume = std::min(incoming_buy->volume, resting_sell->volume);
+            incoming_buy->volume -= fill_volume;
+            execute_order(resting_sell, fill_volume);
+            if (level->head == nullptr)
+            {
+                best_ask_price++;
+            }
         }
     }
 }
