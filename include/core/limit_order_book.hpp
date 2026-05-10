@@ -30,6 +30,5 @@ namespace raijin
         void execute_order(Order *order, uint32_t execution_volume);
         void match_buy_order(Order *incoming_buy);
         void match_sell_order(Order *incoming_sell);
-        void remove_dead_order(Order *order_ptr);
     };
 }

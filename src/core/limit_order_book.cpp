@@ -5,7 +5,7 @@
 
 namespace raijin
 {
-    LimitOrderBook::LimitOrderBook(size_t pool_capacity) : pool(pool_capacity), best_bid_price(0), best_ask_price(MAX_PRICE_TICKS)
+    LimitOrderBook::LimitOrderBook(size_t pool_capacity) : pool(pool_capacity), best_bid_price(MAX_PRICE_TICKS), best_ask_price(MAX_PRICE_TICKS)
     {
 
         for (size_t i = 0; i < MAX_PRICE_TICKS; ++i)
@@ -53,11 +53,11 @@ namespace raijin
 
         level->append_order(order);
 
-        if (is_buy && price > best_bid_price)
+        if (is_buy && (best_bid_price == MAX_PRICE_TICKS || price > best_bid_price))
         {
             best_bid_price = price;
         }
-        else if (!is_buy && price < best_ask_price)
+        else if (!is_buy && (best_ask_price == MAX_PRICE_TICKS || price < best_ask_price))
         {
             best_ask_price = price;
         }
@@ -89,22 +89,82 @@ namespace raijin
     }
     void LimitOrderBook::match_buy_order(Order *incoming_buy)
     {
-        while (incoming_buy->volume > 0 && incoming_buy->price >= best_ask_price)
+        while (incoming_buy->volume > 0)
         {
-            PriceLevel *level = ask_levels[best_ask_price];
-            if (level == nullptr || level->head == nullptr)
+            while (best_ask_price < MAX_PRICE_TICKS && (ask_levels[best_ask_price] == nullptr || ask_levels[best_ask_price]->head == nullptr))
             {
-                best_ask_price++;
-                continue;
+                ++best_ask_price;
             }
+
+            if (best_ask_price >= MAX_PRICE_TICKS || incoming_buy->price < best_ask_price)
+            {
+                break;
+            }
+
+            PriceLevel *level = ask_levels[best_ask_price];
             Order *resting_sell = level->head;
             uint32_t fill_volume = std::min(incoming_buy->volume, resting_sell->volume);
             incoming_buy->volume -= fill_volume;
             execute_order(resting_sell, fill_volume);
             if (level->head == nullptr)
             {
-                best_ask_price++;
+                ++best_ask_price;
             }
+        }
+    }
+
+    void LimitOrderBook::match_sell_order(Order *incoming_sell)
+    {
+        while (incoming_sell->volume > 0)
+        {
+            while (best_bid_price < MAX_PRICE_TICKS && (bid_levels[best_bid_price] == nullptr || bid_levels[best_bid_price]->head == nullptr))
+            {
+                if (best_bid_price == 0)
+                {
+                    best_bid_price = MAX_PRICE_TICKS;
+                    break;
+                }
+
+                --best_bid_price;
+            }
+
+            if (best_bid_price >= MAX_PRICE_TICKS || incoming_sell->price > best_bid_price)
+            {
+                break;
+            }
+
+            PriceLevel *level = bid_levels[best_bid_price];
+            Order *resting_buy = level->head;
+            uint32_t fill_volume = std::min(incoming_sell->volume, resting_buy->volume);
+            incoming_sell->volume -= fill_volume;
+            execute_order(resting_buy, fill_volume);
+            if (level->head == nullptr)
+            {
+                if (best_bid_price == 0)
+                {
+                    best_bid_price = MAX_PRICE_TICKS;
+                }
+                else
+                {
+                    --best_bid_price;
+                }
+            }
+        }
+    }
+    void LimitOrderBook::process_order(Order &order)
+    {
+        if (order.is_buy)
+        {
+            match_buy_order(&order);
+        }
+        else
+        {
+            match_sell_order(&order);
+        }
+
+        if (order.volume > 0)
+        {
+            add_order(order.order_id, order.price, order.volume, order.is_buy);
         }
     }
 }
