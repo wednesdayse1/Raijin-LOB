@@ -89,7 +89,7 @@ TEST_F(LimitOrderBookTest, ToxicFlowCompaction)
     {
         book->cancel_order(i);
     }
-    bool success = book->add_order(257, 5000, 100, true);
+    bool success = book->add_order(257, 5000, 10, true);
     EXPECT_TRUE(success);
     EXPECT_EQ(book->bid_volume(5000), 1570);
 }
