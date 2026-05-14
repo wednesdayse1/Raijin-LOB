@@ -59,3 +59,25 @@ TEST(OrderPoolTest, DataReadWrite)
     EXPECT_EQ(same_order.volume, 100);
     EXPECT_EQ(same_order.price_tick, 500);
 }
+
+TEST(OrderPoolTest, ReuseAfterDeallocation)
+{
+    OrderPool pool(10);
+
+    PoolIndex idx1 = pool.allocate_index();
+    Order &first_order = pool.get_order(idx1);
+    first_order.order_id = 99;
+    first_irder.volume = 50;
+
+    pool.deallocate(idx1);
+
+    PoolIndex idx2 = pool.allocate_index();
+    EXPEXT_EQ(idx1, idx2);
+
+    Order &second_order = pool.get_order(idx2);
+    second_order.order_id = 100;
+    second_order.volume = 200;
+
+    EXPECT_EQ(second_order.order_id, 100);
+    EXPECT_EQ(second_order.volume, 200);
+}

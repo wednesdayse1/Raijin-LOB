@@ -1,0 +1,6 @@
+{
+    "order_pool_capacity": 1000000,
+    "price_level_count": 100000,
+    "level_queue_capacity": 256,
+    "max_order_id": 1000000 
+}
