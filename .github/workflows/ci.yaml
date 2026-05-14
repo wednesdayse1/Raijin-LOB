@@ -1,0 +1,57 @@
+name: Raijin-LOB Engine CI 
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tests/**'
+      - 'CMakeLists.txt'
+      - 'third_party/**'
+      - '.github/workflows/ci.yaml'
+      - '**.cpp'
+      - '**.hpp'
+
+  pull_request:
+    branches: ["main", "master"]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tests/**'
+      - 'CMakeLists.txt'
+      - 'third_party/**'
+      - '.github/workflows/ci.yaml'
+      - '**.cpp'
+      - '**.hpp'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+  
+    - name: Install depedencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+  
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: |
+        cd build
+        make -j$(nproc)
+
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
