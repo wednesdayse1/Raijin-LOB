@@ -1,34 +1,74 @@
 #pragma once
 
-#include "types.hpp"
-#include "price_level.hpp"
 #include "order_pool.hpp"
+#include "price_level.hpp"
+#include "types.hpp"
+
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 namespace raijin
 {
+    struct BookConfig
+    {
+        std::size_t order_pool_capacity;
+        std::uint32_t price_level_count;
+        std::uint32_t level_queue_capacity;
+        std::uint64_t max_order_id;
+    };
+
     class LimitOrderBook
     {
-    private:
-        OrderPool pool;
-        static constexpr size_t MAX_PRICE_TICKS = 100000;
-        PriceLevel *bid_levels[MAX_PRICE_TICKS];
-        PriceLevel *ask_levels[MAX_PRICE_TICKS];
-
-        uint64_t best_bid_price;
-        uint64_t best_ask_price;
-
-        PriceLevel *get_or_create_level(uint64_t price, bool is_buy);
-        void process_order(Order &order);
-
     public:
-        explicit LimitOrderBook(size_t pool_capacity);
-        ~LimitOrderBook();
+        explicit LimitOrderBook(const BookConfig &config);
 
-        void add_order(uint64_t order_id, uint64_t price, uint32_t volume, bool is_buy);
-        void cancel_order(Order *order);
-        void execute_order(Order *order, uint32_t execution_volume);
-        void match_buy_order(Order *incoming_buy);
-        void match_sell_order(Order *incoming_sell);
+        bool add_order(std::uint64_t order_id, std::uint32_t price_tick, std::uint32_t volume, bool is_buy);
+        bool cancel_order(std::uint64_t order_id) noexcept;
+
+        std::uint32_t best_bid_tick() const noexcept;
+        std::uint32_t best_ask_tick() const noexcept;
+        std::uint64_t bid_volume(std::uint32_t price_tick) const noexcept;
+        std::uint64_t ask_volume(std::uint32_t price_tick) const noexcept;
+
+    private:
+        struct Locator
+        {
+            PoolIndex index = 0;
+            std::uint32_t generation = 0;
+            std::uint8_t side = 0;
+            std::uint8_t active = 0;
+        };
+
+        static constexpr std::uint32_t invalid_tick = UINT32_MAX;
+
+        static BookConfig checked_config(const BookConfig &config);
+        static bool is_power_of_two(std::uint32_t value) noexcept;
+        static std::size_t word_count(std::uint32_t price_level_count) noexcept;
+        static void set_bit(std::vector<std::uint64_t> &words, std::uint32_t tick) noexcept;
+        static void reset_bit(std::vector<std::uint64_t> &words, std::uint32_t tick) noexcept;
+
+        bool rest_order(const Order &order, bool is_buy) noexcept;
+        void match_buy(Order &incoming) noexcept;
+        void match_sell(Order &incoming) noexcept;
+        void clean_front(PriceLevel &level, OrderPool &pool) noexcept;
+        void erase_best_ask(std::uint32_t tick) noexcept;
+        void erase_best_bid(std::uint32_t tick) noexcept;
+        std::uint32_t next_ask(std::uint32_t start) const noexcept;
+        std::uint32_t next_bid(std::uint32_t start) const noexcept;
+        bool valid_order_id(std::uint64_t order_id) const noexcept;
+
+        BookConfig config_;
+        OrderPool bid_pool_;
+        OrderPool ask_pool_;
+        std::vector<PriceLevel> bid_levels_;
+        std::vector<PriceLevel> ask_levels_;
+        std::vector<OrderRef> bid_orders_;
+        std::vector<OrderRef> ask_orders_;
+        std::vector<std::uint64_t> bid_words_;
+        std::vector<std::uint64_t> ask_words_;
+        std::vector<Locator> locators_;
+        std::uint32_t best_bid_;
+        std::uint32_t best_ask_;
     };
 }

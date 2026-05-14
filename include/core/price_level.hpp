@@ -2,63 +2,100 @@
 
 #include "types.hpp"
 
+#include <cstdint>
+
 namespace raijin
 {
-
-    struct alignas(64) PriceLevel
+    class PriceLevel
     {
-        uint64_t price;
-        uint32_t total_volume;
-
-        Order *head;
-        Order *tail;
-
-        PriceLevel *next;
-        PriceLevel *prev;
-
-        PriceLevel() : price(0), total_volume(0), head(nullptr), tail(nullptr), next(nullptr), prev(nullptr) {}
-
-        inline void append_order(Order *order)
+    public:
+        void bind(OrderRef *orders, std::uint32_t capacity) noexcept
         {
-            order->next = nullptr;
-            order->prev = tail;
-
-            if (tail == nullptr)
-            {
-                head = order;
-                tail = order;
-            }
-            else
-            {
-                tail->next = order;
-                tail = order;
-            }
-            total_volume += order->volume;
+            orders_ = orders;
+            mask_ = capacity - 1;
         }
 
-        inline void remove_order(Order *order)
+        bool push(OrderRef order) noexcept
         {
-            if (order->prev)
+            if (count_ == mask_ + 1)
             {
-                order->prev->next = order->next;
-            }
-            else
-            {
-                head = order->next;
-            }
-            if (order->next != nullptr)
-            {
-                order->next->prev = order->prev;
-            }
-            else
-            {
-                tail = order->prev;
+                return false;
             }
 
-            order->next = nullptr;
-            order->prev = nullptr;
-
-            total_volume -= order->volume;
+            orders_[tail_] = order;
+            tail_ = (tail_ + 1) & mask_;
+            ++count_;
+            return true;
         }
+
+        OrderRef front() const noexcept
+        {
+            return orders_[head_];
+        }
+
+        void pop() noexcept
+        {
+            head_ = (head_ + 1) & mask_;
+            --count_;
+        }
+
+        template <typename Predicate>
+        void compact(Predicate is_active) noexcept
+        {
+            std::uint32_t active_count = 0;
+            std::uint32_t current = head_;
+
+            for (std::uint32_t i = 0; i < count_; ++i)
+            {
+                const OrderRef ref = orders_[current];
+
+                if (is_active(ref))
+                {
+                    orders_[(head_ + active_count) & mask_] = ref;
+                    ++active_count;
+                }
+
+                current = (current + 1) & mask_;
+            }
+
+            tail_ = (head_ + active_count) & mask_;
+            count_ = active_count;
+        }
+
+        void clear() noexcept
+        {
+            head_ = 0;
+            tail_ = 0;
+            count_ = 0;
+            total_volume_ = 0;
+        }
+
+        bool empty() const noexcept
+        {
+            return count_ == 0;
+        }
+
+        void add_volume(std::uint32_t volume) noexcept
+        {
+            total_volume_ += volume;
+        }
+
+        void remove_volume(std::uint32_t volume) noexcept
+        {
+            total_volume_ -= volume;
+        }
+
+        std::uint64_t total_volume() const noexcept
+        {
+            return total_volume_;
+        }
+
+    private:
+        OrderRef *orders_ = nullptr;
+        std::uint64_t total_volume_ = 0;
+        std::uint32_t head_ = 0;
+        std::uint32_t tail_ = 0;
+        std::uint32_t count_ = 0;
+        std::uint32_t mask_ = 0;
     };
 }

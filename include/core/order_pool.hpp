@@ -1,6 +1,9 @@
 #pragma once
 
 #include "types.hpp"
+
+#include <cstddef>
+#include <cstdint>
 #include <memory_resource>
 #include <vector>
 
@@ -8,20 +11,29 @@ namespace raijin
 {
     class OrderPool
     {
-    private:
-        std::pmr::unsynchronized_pool_resource pool;
-        std::pmr::monotonic_buffer_resource buffer;
-        std::vector<std::byte> arena;
-
     public:
-        explicit OrderPool(size_t capacity); // we call this constructor once at the start of the program for memory allcoation
-        ~OrderPool() = default;
+        explicit OrderPool(std::size_t capacity);
 
-        // this is a safety measure to prevent copying
         OrderPool(const OrderPool &) = delete;
         OrderPool &operator=(const OrderPool &) = delete;
 
-        Order *allocate();
-        void deallocate(Order *order);
+        PoolIndex allocate_index() noexcept;
+        void deallocate(PoolIndex index) noexcept;
+
+        Order &get_order(PoolIndex index) noexcept;
+        const Order &get_order(PoolIndex index) const noexcept;
+
+        std::uint32_t generation(PoolIndex index) const noexcept;
+        std::size_t capacity() const noexcept;
+
+    private:
+        static std::size_t arena_bytes(std::size_t capacity);
+
+        std::vector<std::byte> arena_;
+        std::pmr::monotonic_buffer_resource memory_;
+        std::pmr::vector<Order> orders_;
+        std::pmr::vector<PoolIndex> free_;
+        std::pmr::vector<std::uint32_t> generations_;
+        std::size_t free_count_;
     };
 }

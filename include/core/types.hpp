@@ -4,10 +4,21 @@
 
 namespace raijin
 {
+    using PoolIndex = std::uint32_t;
+
     struct alignas(16) Order
     {
-        uint64_t order_id;
-        uint32_t price_tick;
-        uint32_t volume;
+        std::uint64_t order_id;
+        std::uint32_t volume;
+        std::uint32_t price_tick;
     };
+
+    struct OrderRef
+    {
+        PoolIndex index;
+        std::uint32_t generation;
+    };
+
+    static_assert(sizeof(Order) == 16);
+    static_assert(alignof(Order) == 16);
 }
