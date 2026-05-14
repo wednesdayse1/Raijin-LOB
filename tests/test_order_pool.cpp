@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "../include/core/order_pool.hpp"
-include<limits>
+#include <limits>
 
-    using namespace raijin;
+using namespace raijin;
 
 TEST(OrderPoolTest, Initialization)
 {
@@ -67,12 +67,12 @@ TEST(OrderPoolTest, ReuseAfterDeallocation)
     PoolIndex idx1 = pool.allocate_index();
     Order &first_order = pool.get_order(idx1);
     first_order.order_id = 99;
-    first_irder.volume = 50;
+    first_order.volume = 50;
 
     pool.deallocate(idx1);
 
     PoolIndex idx2 = pool.allocate_index();
-    EXPEXT_EQ(idx1, idx2);
+    EXPECT_EQ(idx1, idx2);
 
     Order &second_order = pool.get_order(idx2);
     second_order.order_id = 100;
