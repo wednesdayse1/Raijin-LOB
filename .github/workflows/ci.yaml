@@ -24,6 +24,9 @@ on:
       - '**.cpp'
       - '**.hpp'
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
