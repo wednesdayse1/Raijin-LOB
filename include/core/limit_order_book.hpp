@@ -39,8 +39,6 @@ namespace raijin
             std::uint32_t generation = 0;
             std::uint8_t side = 0;
             std::uint8_t active = 0;
-            std::uint32_t best_ask_;
-            RingBuffer<ExecutionReceipt> *receipt_queue_;
         };
 
         static constexpr std::uint32_t invalid_tick = UINT32_MAX;
@@ -73,5 +71,7 @@ namespace raijin
         std::vector<Locator> locators_;
         std::uint32_t best_bid_;
         std::uint32_t best_ask_;
+        std::uint32_t best_ask_;
+        RingBuffer<ExecutionReceipt> *receipt_queue_;
     };
 }
