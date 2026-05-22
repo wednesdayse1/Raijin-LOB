@@ -33,3 +33,13 @@ target_link_libraries(raijin_tests PRIVATE core_objects GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(raijin_tests)
+
+set(BENCHMARK_ENABLE_RTTI ON CACHE BOOL "Enable RTTI in Google Benchmark" FORCE)
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable benchmark tests" FORCE)
+
+add_subdirectory(third_party/benchmark)
+
+file(GLOB BENCHMARK_SOURCES CONFIGURE_DEPENDS "benchmarks/*.cpp")
+
+add_executable(raijin_benchmarks ${BENCHMARK_SOURCES})
+target_link_libraries(raijin_benchmarks PRIVATE core_objects benchmark::benchmark)

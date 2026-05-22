@@ -25,7 +25,7 @@ on:
       - '**.hpp'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-and-test:
@@ -67,3 +67,19 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+
+    - name: Run Benchmarks
+      run: |
+        cd build
+        ./raijin_benchmarks --benchmark_format=json > benchmark_result.json
+
+    - name: Store and Update Benchmark Results
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'googlecpp'
+        output-file-path: build/benchmark_result.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+        comment-on-alert: true
+        fail-on-alert: true
+        alert-threshold: '120%'
