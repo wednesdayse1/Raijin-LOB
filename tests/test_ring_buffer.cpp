@@ -8,7 +8,7 @@ using namespace raijin;
 TEST(RingBufferTest, BasicPushPop)
 {
     RingBuffer<ExecutionReceipt> rb(4);
-    ExecutionReceipt item;
+    ExecutionReceipt item{};
 
     EXPECT_FALSE(rb.pop(item)); // buffer is empty
     EXPECT_TRUE(rb.push({100, 200, 5000, 50}));
