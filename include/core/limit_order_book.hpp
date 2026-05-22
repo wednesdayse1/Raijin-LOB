@@ -3,6 +3,7 @@
 #include "order_pool.hpp"
 #include "price_level.hpp"
 #include "types.hpp"
+#include "ring_buffer.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -21,7 +22,7 @@ namespace raijin
     class LimitOrderBook
     {
     public:
-        explicit LimitOrderBook(const BookConfig &config);
+        explicit LimitOrderBook(const BookConfig &config, RingBuffer<ExecutionReceipt> *receipt_queue = nullptr);
 
         bool add_order(std::uint64_t order_id, std::uint32_t price_tick, std::uint32_t volume, bool is_buy);
         bool cancel_order(std::uint64_t order_id) noexcept;
@@ -38,6 +39,8 @@ namespace raijin
             std::uint32_t generation = 0;
             std::uint8_t side = 0;
             std::uint8_t active = 0;
+            std::uint32_t best_ask_;
+            RingBuffer<ExecutionReceipt> *receipt_queue_;
         };
 
         static constexpr std::uint32_t invalid_tick = UINT32_MAX;

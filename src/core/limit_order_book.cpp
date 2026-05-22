@@ -6,7 +6,7 @@
 
 namespace raijin
 {
-    LimitOrderBook::LimitOrderBook(const BookConfig &config)
+    LimitOrderBook::LimitOrderBook(const BookConfig &config, RingBuffer<ExecutionReceipt> *receipt_queue)
         : config_(checked_config(config)),
           bid_pool_(config_.order_pool_capacity),
           ask_pool_(config_.order_pool_capacity),
@@ -18,7 +18,8 @@ namespace raijin
           ask_words_(word_count(config_.price_level_count)),
           locators_(static_cast<std::size_t>(config_.max_order_id) + 1),
           best_bid_(invalid_tick),
-          best_ask_(invalid_tick)
+          best_ask_(invalid_tick),
+          receipt_queue_(receipt_queue)
     {
         for (std::uint32_t tick = 0; tick < config_.price_level_count; ++tick)
         {
@@ -247,6 +248,15 @@ namespace raijin
             resting.volume -= fill;
             level.remove_volume(fill);
 
+            if (receipt_queue_){
+                receipt_queue_->push({
+                    .maker_order_id = resting.order_id,
+                    .taker_order_id = incoming.order_id,
+                    .price_tick = resting.price_tick,
+                    .executed_volume = fill
+                });
+            }
+
             if (resting.volume == 0)
             {
                 locators_[resting.order_id].active = 0;
@@ -284,6 +294,15 @@ namespace raijin
             resting.volume -= fill;
             level.remove_volume(fill);
 
+            if(receipt_queue_){
+                receipt_queue_->push({
+                    .maker_order_id = resting.order_id,
+                    .taker_order_id = incoming.order_id,
+                    .price_tick = resting.price_tick,
+                    .executed_volume = fill
+                });
+            }
+            
             if (resting.volume == 0)
             {
                 locators_[resting.order_id].active = 0;
