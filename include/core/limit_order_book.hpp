@@ -71,7 +71,6 @@ namespace raijin
         std::vector<Locator> locators_;
         std::uint32_t best_bid_;
         std::uint32_t best_ask_;
-        std::uint32_t best_ask_;
         RingBuffer<ExecutionReceipt> *receipt_queue_;
     };
 }
