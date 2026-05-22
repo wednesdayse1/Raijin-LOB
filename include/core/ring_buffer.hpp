@@ -29,9 +29,9 @@ namespace raijin
     public:
         explicit RingBuffer(std::size_t capacity)
         {
-            if (capacity == 0 || capacity & (capacity - 1) != 0)
+            if (capacity == 0 || (capacity & (capacity - 1)) != 0)
             {
-                throw std::invalid_argument("RingBuffer capacity must be a power of 2.")
+                throw std::invalid_argument("RingBuffer capacity must be a power of 2.");
             }
             buffer_.resize(capacity);
             mask_ = capacity - 1;
@@ -44,7 +44,7 @@ namespace raijin
         bool push(const T &item) noexcept
         {
             const std::size_t write_idx = write_pos_.load(std::memory_order_relaxed);
-            const std::size_t read_idx = read - pos_.load(std::memory_order_acquire);
+            const std::size_t read_idx = read_pos_.load(std::memory_order_acquire);
 
             // if buffer is full (write caught upto read form behind)
             if (write_idx - read_idx == buffer_.size())
@@ -66,7 +66,8 @@ namespace raijin
             {
                 return false
             }
-            item = buffer_[read_idx & mask_] : read_pos_.store(read_idx + 1, std::memory_order_release);
+            item = buffer_[read_idx & mask_];
+            read_pos_.store(read_idx + 1, std::memory_order_release);
             return true;
         }
     };
