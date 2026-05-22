@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+IndentWidth: 4
+Standard: c++20
+PointerAlignment: Right
+ColumnLimit: 120

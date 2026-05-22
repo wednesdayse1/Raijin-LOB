@@ -1,0 +1,10 @@
+Checks: >
+  -*,
+  readability-*,
+  performance-*,
+  bugprone-*,
+  modernize-*,
+  cppcoreguidelines-*,
+  -modernize-use-trailing-return-type
+
+WarningsAsErrors: "*"

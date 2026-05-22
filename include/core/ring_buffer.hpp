@@ -49,14 +49,14 @@ namespace raijin
             // if buffer is full (write caught upto read form behind)
             if (write_idx - read_idx == buffer_.size())
             {
-                return false
+                return false;
             }
             buffer_[write_idx & mask_] = item;
 
             write_pos_.store(write_idx + 1, std::memory_order_release);
             return true;
         }
-        // called by consumer
+
         bool pop(T &item) noexcept
         {
             const std::size_t read_idx = read_pos_.load(std::memory_order_relaxed);
@@ -64,7 +64,7 @@ namespace raijin
 
             if (read_idx == write_idx)
             {
-                return false
+                return false;
             }
             item = buffer_[read_idx & mask_];
             read_pos_.store(read_idx + 1, std::memory_order_release);
